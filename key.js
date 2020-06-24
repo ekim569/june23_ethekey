@@ -1,7 +1,9 @@
 import crypto from "crypto";
 import secp256k1 from "secp256k1";
 import createKeccakHash from "keccak";
+import Mnemonic from "bitcore-mnemonic";
 import { checkServerIdentity } from "tls";
+import { Console } from "console";
 
 function createPrivateKey() {
     let privateKey;
@@ -36,11 +38,32 @@ function toChecksumAddress (address) {
   
     return ret
   }
-const privateKey = createPrivateKey();
-const publicKey = createPublicKey(privateKey);
-const address = createAddress(publicKey);
 
-const ChecksumAddress = toChecksumAddress(address);
+  function privateKeyToaddress(privateKey) {
+    const publicKey = createPublicKey(privateKey);
+    const address = createAddress(publicKey);
+    return toChecksumAddress = toChecksumAddress(address);
+  }
 
+function createMNemonic(wordsCount = 12) {
+  if (wordsCount < 12 || wordsCount > 24 || wordsCount % 3 !== 0) {
+    throw new Error ("Invalid number of words");
+  }
+  const entropy = (16 + (wordsCount - 12) / 3 *4) * 8;
+    return new Mnemonic(entropy);
+  //return new Mnemonic(crypto.randomBytes(entropy));
+}
+
+function mnemonicToPrivateKey(mnmonic) {
+  const privateKey = mnmonic.toHDPrivateKey().derive("m/44'/60'/0'/0/0").privateKey;
+  return Buffer.from(privateKey.toString(), "hex");
+}
+
+const mnmonic = createMNemonic();
+console.log(mnmonic.toString());
+
+const privateKey = mnemonicToPrivateKey(mnmonic);
+console.log(privateKey.toString("hex"))
+
+const address = privateKeyToaddress(privateKey);
 console.log(address);
-console.log(ChecksumAddress);
